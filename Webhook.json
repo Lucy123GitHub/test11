@@ -1,0 +1,323 @@
+{
+	"info": {
+		"_postman_id": "474fbd9b-aa02-4d87-a137-19abfb4dbe94",
+		"name": "Webhook",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "SendMessage",
+			"item": [
+				{
+					"name": "Verify Token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"检测响应 \", function () {",
+									"    var jsonData = pm.response.json();",
+									"    console.log('ddd ' + jsonData);",
+									"    pm.expect(jsonData).to.eql(123452345);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": []
+						},
+						"url": {
+							"raw": "https://{{url}}/services/apexrest/CharketApp/webhook?hub.mode=subscribe&hub.challenge=123452345&hub.verify_token=FakeToken",
+							"protocol": "https",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"services",
+								"apexrest",
+								"CharketApp",
+								"webhook"
+							],
+							"query": [
+								{
+									"key": "hub.mode",
+									"value": "subscribe"
+								},
+								{
+									"key": "hub.challenge",
+									"value": "123452345"
+								},
+								{
+									"key": "hub.verify_token",
+									"value": "FakeToken"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Send Text Message",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"var timestamp = Math.round(new Date());",
+									"pm.collectionVariables.set(\"timestamp\", timestamp);",
+									"var msgId = Number(Math.random().toString().substr(3,5) + Date.now()).toString(36);",
+									"pm.collectionVariables.set(\"MessageId\", msgId);",
+									"",
+									"var appSecret = 'FakeAppSecret';",
+									"",
+									"//var test = JSON.parse(JSON.stringify(request.data).replace(/ /g, ''));",
+									"var jsonbody = JSON.parse(request.data);",
+									"",
+									"jsonbody.entry[0].changes[0].value.contacts[0].profile.name = data.ContactName;",
+									"jsonbody.entry[0].changes[0].value.contacts[0].wa_id = String(data.CustomerPhoneNumber);",
+									"jsonbody.entry[0].changes[0].value.messages[0].from = String(data.CustomerPhoneNumber);",
+									"jsonbody.entry[0].changes[0].value.messages[0].id = msgId;",
+									"jsonbody.entry[0].changes[0].value.messages[0].timestamp = String(timestamp);",
+									"jsonbody.entry[0].changes[0].value.messages[0].text.body = data.Content;",
+									"jsonbody = JSON.stringify(jsonbody);",
+									"//var params = request.data;",
+									"console.log('jsonbody ' + jsonbody);",
+									"",
+									"var signHmacSHA1=CryptoJS.HmacSHA1(jsonbody, appSecret).toString(CryptoJS.enc.Hex);",
+									"console.log('aaa ' + signHmacSHA1);",
+									"pm.collectionVariables.set(\"signature\", \"sha1=\" + signHmacSHA1);",
+									"",
+									"",
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-Hub-Signature",
+								"value": "{{signature}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"object\":\"whatsapp_business_account\",\"entry\":[{\"id\":\"TestWhatsApp\",\"changes\":[{\"value\":{\"messaging_product\":\"whatsapp\",\"metadata\":{\"display_phone_number\":\"1234567890\",\"phone_number_id\":\"1234567890\"},\"contacts\":[{\"profile\":{\"name\":\"{{ContactName}}\"},\"wa_id\":\"{{CustomerPhoneNumber}}\"}],\"messages\":[{\"from\":\"{{CustomerPhoneNumber}}\",\"id\":\"{{MessageId}}\",\"timestamp\":\"{{timestamp}}\",\"text\":{\"body\":\"{{Content}}\"},\"type\":\"text\"}]},\"field\":\"messages\"}]}]}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://{{url}}/services/apexrest/CharketApp/webhook/WhatsApp",
+							"protocol": "https",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"services",
+								"apexrest",
+								"CharketApp",
+								"webhook",
+								"WhatsApp"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"auth": {
+				"type": "noauth"
+			},
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				}
+			]
+		},
+		{
+			"name": "BulkSendMessage",
+			"item": [
+				{
+					"name": "多个请求发送多条数据",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"var timestamp = Math.round(new Date() / 1000);",
+									"pm.collectionVariables.set(\"timestamp\", timestamp);",
+									"var msgId = Number(Math.random().toString().substr(3,5) + Date.now()).toString(36);",
+									"pm.collectionVariables.set(\"MessageId\", msgId);",
+									"",
+									"var msgId2 = Number(Math.random().toString().substr(3,5) + Date.now()).toString(36);",
+									"pm.collectionVariables.set(\"MessageId2\", msgId2);",
+									"var appSecret = 'FakeAppSecret';",
+									"",
+									"//var test = JSON.parse(JSON.stringify(request.data).replace(/ /g, ''));",
+									"var jsonbody = JSON.parse(request.data);",
+									"",
+									"jsonbody.entry[0].changes[0].value.contacts[0].profile.name = data.ContactName;",
+									"jsonbody.entry[0].changes[0].value.contacts[1].profile.name = data.ContactName2;",
+									"",
+									"jsonbody.entry[0].changes[0].value.contacts[0].wa_id = String(data.CustomerPhoneNumber);",
+									"jsonbody.entry[0].changes[0].value.contacts[1].wa_id = String(data.CustomerPhoneNumber2);",
+									"jsonbody.entry[0].changes[0].value.messages[0].from = String(data.CustomerPhoneNumber);",
+									"jsonbody.entry[0].changes[0].value.messages[1].from = String(data.CustomerPhoneNumber2);",
+									"jsonbody.entry[0].changes[0].value.messages[0].id = msgId;",
+									"jsonbody.entry[0].changes[0].value.messages[1].id = msgId2;",
+									"jsonbody.entry[0].changes[0].value.messages[0].timestamp = String(timestamp);",
+									"jsonbody.entry[0].changes[0].value.messages[1].timestamp = String(timestamp);",
+									"jsonbody.entry[0].changes[0].value.messages[0].text.body = data.Content;",
+									"jsonbody.entry[0].changes[0].value.messages[1].text.body = data.Content2;",
+									"jsonbody = JSON.stringify(jsonbody);",
+									"//var params = request.data;",
+									"console.log('jsonbody ' + jsonbody);",
+									"",
+									"var signHmacSHA1=CryptoJS.HmacSHA1(jsonbody, appSecret).toString(CryptoJS.enc.Hex);",
+									"console.log('aaa ' + signHmacSHA1);",
+									"pm.collectionVariables.set(\"signature\", \"sha1=\" + signHmacSHA1);"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-Hub-Signature",
+								"value": "{{signature}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"object\":\"whatsapp_business_account\",\"entry\":[{\"id\":\"TestWhatsApp\",\"changes\":[{\"value\":{\"messaging_product\":\"whatsapp\",\"metadata\":{\"display_phone_number\":\"1234567890\",\"phone_number_id\":\"1234567890\"},\"contacts\":[{\"profile\":{\"name\":\"{{ContactName}}\"},\"wa_id\":\"{{CustomerPhoneNumber}}\"},{\"profile\":{\"name\":\"{{ContactName2}}\"},\"wa_id\":\"{{CustomerPhoneNumber2}}\"}],\"messages\":[{\"from\":\"{{CustomerPhoneNumber}}\",\"id\":\"{{MessageId}}\",\"timestamp\":\"{{timestamp}}\",\"text\":{\"body\":\"{{Content}}\"},\"type\":\"text\"},{\"from\":\"{{CustomerPhoneNumber2}}\",\"id\":\"{{MessageId2}}\",\"timestamp\":\"{{timestamp}}\",\"text\":{\"body\":\"{{Content2}}\"},\"type\":\"text\"}]},\"field\":\"messages\"}]}]}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://{{url}}/services/apexrest/CharketApp/webhook/WhatsApp",
+							"protocol": "https",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"services",
+								"apexrest",
+								"CharketApp",
+								"webhook",
+								"WhatsApp"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"pm.test(\"Status code is 200\", function () {",
+					"    pm.response.to.have.status(200);",
+					"});",
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "signature",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "timestamp",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "MessageId",
+			"value": "",
+			"type": "string"
+		}
+	]
+}
